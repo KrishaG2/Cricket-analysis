@@ -1,4 +1,4 @@
-# CricketIQ
+# Cricket analysis 
 
 A small cricket analytics project I built to apply linear algebra to real IPL data.
 
