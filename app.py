@@ -7,15 +7,11 @@ from data_utils import BATTING_FEATURES, batting_players, bowling_players, load_
 from maths import pca_from_scratch, role_match_scores, similar_players
 
 
-st.set_page_config(page_title="CricketIQ", page_icon="🏏", layout="wide")
+st.set_page_config(page_title="Cricket Analysis", layout="wide")
 
 
-def nice_name(name):
+def display_name(name):
     return name.replace("_", " ").title()
-
-
-def percent(value):
-    return f"{value * 100:.1f}%"
 
 
 try:
@@ -28,7 +24,7 @@ except FileNotFoundError:
 batters = batting_players(players).reset_index(drop=True)
 bowlers = bowling_players(players).reset_index(drop=True)
 
-st.title("🏏 CricketIQ")
+st.title(" Cricket Analysis")
 st.caption("Exploring IPL batting styles with linear algebra.")
 
 page = st.sidebar.radio(
@@ -38,7 +34,7 @@ page = st.sidebar.radio(
 
 
 if page == "Similar Players":
-    st.header("Similar Player Finder")
+    st.header("Similar Players")
 
     selected_name = st.selectbox("Choose a batter", batters["player"].tolist())
     selected_index = batters.index[batters["player"] == selected_name][0]
@@ -53,15 +49,17 @@ if page == "Similar Players":
     scores = similar_players(matrix, selected_index)
 
     results = batters[["player", "role"]].copy()
-    results["similarity"] = scores
+    results["Cosine similarity"] = scores
     results = results[results["player"] != selected_name]
-    results = results.sort_values("similarity", ascending=False).head(5)
-    results["similarity"] = results["similarity"].apply(percent)
+    results = results.sort_values("Cosine similarity", ascending=False).head(5)
+    results["Cosine similarity"] = results["Cosine similarity"].apply(
+        lambda x: f"{x:.3f}"
+    )
 
     st.subheader("Closest batting profiles")
     st.dataframe(results, hide_index=True, use_container_width=True)
 
-    st.caption("Similarity is calculated from the full batting-stat vector using cosine similarity.")
+    st.caption("Similarity is based on all batting features using cosine similarity.")
 
 
 elif page == "Build a Player":
@@ -85,7 +83,7 @@ elif page == "Build a Player":
         with column:
             target.append(
                 st.slider(
-                    nice_name(feature),
+                    display_name(feature),
                     min_value=minimum,
                     max_value=maximum,
                     value=middle,
@@ -101,7 +99,7 @@ elif page == "Build a Player":
         for feature in BATTING_FEATURES:
             weights.append(
                 st.slider(
-                    nice_name(feature),
+                    display_name(feature),
                     min_value=0.0,
                     max_value=2.0,
                     value=1.0,
@@ -119,10 +117,16 @@ elif page == "Build a Player":
     )
 
     results = batters[["player", "role"]].copy()
-    results["match"] = scores
-    results = results.sort_values("match", ascending=False).head(5)
-    results["match"] = results["match"].apply(percent)
+    results["Cosine similarity"] = scores
 
+    results = results.sort_values(
+        "Cosine similarity",
+        ascending=False
+    ).head(5)
+
+    results["Cosine similarity"] = results["Cosine similarity"].apply(
+        lambda x: f"{x:.3f}"
+    )
     st.subheader("Best matches")
     st.dataframe(results, hide_index=True, use_container_width=True)
 
@@ -132,11 +136,10 @@ elif page == "Build a Player":
 
 
 elif page == "Player Map":
-    st.header("PCA Player Map")
+    st.header("Player Map")
 
     st.write(
-        "Players close together have more similar overall batting profiles. "
-        "Hover over a point to see the player and their original statistics."
+        "PCA reduces the 8 batting features to 2 dimensions so the players can be plotted."
     )
 
     minimum_balls = st.slider(
@@ -228,7 +231,7 @@ elif page == "Player Map":
         "from the original eight batting statistics."
     )
 
-    with st.expander("How PCA built this map"):
+    with st.expander("PCA details"):
         st.write(
             f"PC1 keeps {explained[0] * 100:.1f}% of the variation and "
             f"PC2 keeps {explained[1] * 100:.1f}%."
@@ -240,7 +243,7 @@ elif page == "Player Map":
 
         loadings = pd.DataFrame(
             pca["components"],
-            index=[nice_name(feature) for feature in BATTING_FEATURES],
+            index=[display_name(feature) for feature in BATTING_FEATURES],
             columns=["PC1", "PC2"],
         )
 
