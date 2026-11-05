@@ -54,7 +54,7 @@ Cricsheet data is used with attribution. Its data information is available [here
 ## Project structure
 
 ```text
-CricketIQ/
+Cricket-analysis/
 ├── app.py
 ├── maths.py
 ├── data_utils.py
